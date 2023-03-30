@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Vertical Line Test</title>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.5.0/math.min.js"></script>
+	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+	<script>
+		function isFunctionVerticalLineTestPassed(verticalLineX) {
+			const equation = document.getElementById("equation").value;
+			try {
+				math.evaluate(equation, { x: verticalLineX }); // Evaluate the equation with the given x value
+				return true; // If no error is thrown, the function passes the vertical line test
+			} catch (error) {
+				return false; // If an error is thrown, the function fails the vertical line test
+			}
+		}
+		function onSubmit() {
+			const equation = document.getElementById("equation").value;
+			const verticalLineX = parseFloat(document.getElementById("vertical-line-x").value);
+			if (isNaN(verticalLineX)) {
+				alert("Please enter a valid number for the vertical line x value.");
+				return false;
+			}
+			const passesTest = isFunctionVerticalLineTestPassed(verticalLineX);
+			const result = passesTest ? "passes" : "fails";
+			if (!passesTest) {
+				document.getElementById("result").textContent = "The function fails the vertical line test and cannot be represented on a graph because it is not a function.";
+				Plotly.purge('plot');
+				return false; // Prevent the form from submitting and reloading the page
+			}
+			const xValues = math.range(-10, 10, 0.1).toArray();
+			const yValues = xValues.map(x => math.evaluate(equation, { x }));
+			const trace = {
+				x: xValues,
+				y: yValues,
+				type: 'scatter',
+				mode: 'lines',
+				line: { color: 'red' },
+			};
+			const layout = {
+				xaxis: { range: [-10, 10] },
+				yaxis: { range: [-50, 50] },
+				shapes: [{
+					type: 'line',
+					x0: verticalLineX,
+					y0: -50,
+					x1: verticalLineX,
+					y1: 50,
+					line: {
+						color: 'black',
+						width: 2
+					}
+				}]
+			};
+			document.getElementById("result").textContent = `The function ${result} the vertical line test.`;
+			Plotly.newPlot('plot', [trace], layout);
+			return false; // Prevent the form from submitting and reloading the page
+		}
+		function onRefresh() {
+			document.getElementById("equation").value = "";
+			document.getElementById("result").textContent = "";
+			Plotly.purge('plot');
+		}
+	</script>
+</head>
+<body>
+	<h1>Vertical Line Test</h1>
+	<form onsubmit="return onSubmit();">
+		<p>Enter a function:</p>
+		<input type="text" id="equation" name="equation" placeholder="e.g. x^2 + 3x + 2">
+		<p>Enter the x value of the vertical line:</p>
+		<input type="text" id="vertical-line-x" name="vertical-line-x" placeholder="e.g. 2">
+		<input type="submit" value="Test">
+		<button type="button" onclick="onRefresh();">Refresh</button>
+	</form>
+	<p id="result"></p>
+	<div id="plot"></div>
+</body>
+</html>
